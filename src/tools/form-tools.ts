@@ -254,36 +254,16 @@ export class FormTools {
    */
   private async createForm(params: MCPCreateFormParams): Promise<any> {
     try {
-      const locationId = params.locationId || this.apiClient.getLocationId();
-      
+      // TODO: Implement getLocationId method in API client
+      // For now, require locationId as parameter
+      const locationId = params.locationId || (this.apiClient as any).config?.locationId;
       if (!locationId) {
-        throw new Error('Location ID is required');
+        throw new Error('Location ID is required. Please provide locationId parameter.');
       }
 
-      // Call HighLevel API to create form
-      // Note: This uses the forms API endpoint
-      const result = await this.apiClient.createForm({
-        locationId,
-        name: params.name,
-        fields: params.fields,
-        description: params.description
-      });
-
-      if (!result.success || !result.data) {
-        throw new Error(`Failed to create form: ${result.error?.message || 'Unknown error'}`);
-      }
-
-      return {
-        success: true,
-        form: result.data,
-        message: `Successfully created form: ${params.name}`,
-        metadata: {
-          formId: result.data.id,
-          formName: result.data.name,
-          fieldCount: params.fields.length,
-          locationId
-        }
-      };
+      // TODO: Implement createForm method in API client
+      // For now, this is a placeholder
+      throw new Error('Form creation not yet implemented in API client. This feature is coming soon.');
     } catch (error) {
       console.error('Error creating form:', error);
       throw new Error(`Failed to create form: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -295,34 +275,15 @@ export class FormTools {
    */
   private async updateForm(params: MCPUpdateFormParams): Promise<any> {
     try {
-      const locationId = params.locationId || this.apiClient.getLocationId();
-      
+      // TODO: Implement getLocationId method in API client
+      // For now, require locationId as parameter
+      const locationId = params.locationId || (this.apiClient as any).config?.locationId;
       if (!locationId) {
-        throw new Error('Location ID is required');
+        throw new Error('Location ID is required. Please provide locationId parameter.');
       }
 
-      const result = await this.apiClient.updateForm({
-        formId: params.formId,
-        locationId,
-        name: params.name,
-        fields: params.fields,
-        description: params.description
-      });
-
-      if (!result.success || !result.data) {
-        throw new Error(`Failed to update form: ${result.error?.message || 'Unknown error'}`);
-      }
-
-      return {
-        success: true,
-        form: result.data,
-        message: `Successfully updated form: ${params.formId}`,
-        metadata: {
-          formId: result.data.id,
-          formName: result.data.name,
-          locationId
-        }
-      };
+      // TODO: Implement updateForm method in API client
+      throw new Error('Form update not yet implemented in API client. This feature is coming soon.');
     } catch (error) {
       console.error('Error updating form:', error);
       throw new Error(`Failed to update form: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -334,32 +295,15 @@ export class FormTools {
    */
   private async getForm(params: MCPGetFormParams): Promise<any> {
     try {
-      const locationId = params.locationId || this.apiClient.getLocationId();
-      
+      // TODO: Implement getLocationId method in API client
+      // For now, require locationId as parameter
+      const locationId = params.locationId || (this.apiClient as any).config?.locationId;
       if (!locationId) {
-        throw new Error('Location ID is required');
+        throw new Error('Location ID is required. Please provide locationId parameter.');
       }
 
-      const result = await this.apiClient.getForm({
-        formId: params.formId,
-        locationId
-      });
-
-      if (!result.success || !result.data) {
-        throw new Error(`Failed to get form: ${result.error?.message || 'Unknown error'}`);
-      }
-
-      return {
-        success: true,
-        form: result.data,
-        message: `Successfully retrieved form: ${params.formId}`,
-        metadata: {
-          formId: result.data.id,
-          formName: result.data.name,
-          fieldCount: result.data.fields?.length || 0,
-          locationId
-        }
-      };
+      // TODO: Implement getForm method in API client
+      throw new Error('Form retrieval not yet implemented in API client. This feature is coming soon.');
     } catch (error) {
       console.error('Error getting form:', error);
       throw new Error(`Failed to get form: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -371,37 +315,15 @@ export class FormTools {
    */
   private async listForms(params: MCPListFormsParams): Promise<any> {
     try {
-      const locationId = params.locationId || this.apiClient.getLocationId();
-      
+      // TODO: Implement getLocationId method in API client
+      // For now, require locationId as parameter
+      const locationId = params.locationId || (this.apiClient as any).config?.locationId;
       if (!locationId) {
-        throw new Error('Location ID is required');
+        throw new Error('Location ID is required. Please provide locationId parameter.');
       }
 
-      const result = await this.apiClient.listForms({
-        locationId,
-        limit: params.limit || 50,
-        skip: params.skip || 0
-      });
-
-      if (!result.success || !result.data) {
-        throw new Error(`Failed to list forms: ${result.error?.message || 'Unknown error'}`);
-      }
-
-      return {
-        success: true,
-        forms: result.data.forms || [],
-        total: result.data.total || 0,
-        message: `Successfully retrieved ${result.data.forms?.length || 0} forms`,
-        metadata: {
-          totalForms: result.data.total || 0,
-          returnedCount: result.data.forms?.length || 0,
-          pagination: {
-            skip: params.skip || 0,
-            limit: params.limit || 50
-          },
-          locationId
-        }
-      };
+      // TODO: Implement listForms method in API client
+      throw new Error('Form listing not yet implemented in API client. This feature is coming soon.');
     } catch (error) {
       console.error('Error listing forms:', error);
       throw new Error(`Failed to list forms: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -413,29 +335,15 @@ export class FormTools {
    */
   private async deleteForm(params: MCPDeleteFormParams): Promise<any> {
     try {
-      const locationId = params.locationId || this.apiClient.getLocationId();
-      
+      // TODO: Implement getLocationId method in API client
+      // For now, require locationId as parameter
+      const locationId = params.locationId || (this.apiClient as any).config?.locationId;
       if (!locationId) {
-        throw new Error('Location ID is required');
+        throw new Error('Location ID is required. Please provide locationId parameter.');
       }
 
-      const result = await this.apiClient.deleteForm({
-        formId: params.formId,
-        locationId
-      });
-
-      if (!result.success) {
-        throw new Error(`Failed to delete form: ${result.error?.message || 'Unknown error'}`);
-      }
-
-      return {
-        success: true,
-        message: `Successfully deleted form: ${params.formId}`,
-        metadata: {
-          formId: params.formId,
-          locationId
-        }
-      };
+      // TODO: Implement deleteForm method in API client
+      throw new Error('Form deletion not yet implemented in API client. This feature is coming soon.');
     } catch (error) {
       console.error('Error deleting form:', error);
       throw new Error(`Failed to delete form: ${error instanceof Error ? error.message : 'Unknown error'}`);
