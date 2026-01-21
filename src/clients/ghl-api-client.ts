@@ -46,6 +46,17 @@ import {
   GHLGetBlogCategoriesRequest,
   GHLGetBlogSitesRequest,
   GHLCheckUrlSlugRequest,
+  // Forms API types
+  GHLForm,
+  GHLFormsListResponse,
+  GHLListFormsRequest,
+  // Knowledge Base API types
+  GHLKnowledgeBase,
+  GHLKnowledgeBaseListResponse,
+  GHLKbFaq,
+  // Conversation AI API types
+  GHLConversationAIAgent,
+  GHLConversationAIAgentSearchResponse,
   GHLSearchOpportunitiesRequest,
   GHLSearchOpportunitiesResponse,
   GHLGetPipelinesResponse,
@@ -1095,6 +1106,155 @@ export class GHLApiClient {
     } catch (error) {
       throw error;
     }
+  }
+
+  /**
+   * FORMS API METHODS
+   * Scope: forms.readonly. See marketplace.gohighlevel.com/docs/ghl/forms/
+   */
+
+  /**
+   * List forms for a location
+   * GET /forms/ — locationId, skip, limit, type (optional)
+   */
+  async listForms(params: GHLListFormsRequest): Promise<GHLApiResponse<GHLFormsListResponse>> {
+    try {
+      const queryParams: Record<string, string | number | undefined> = {
+        locationId: params.locationId || this.config.locationId,
+        skip: params.skip ?? 0,
+        limit: params.limit ?? 10,
+        ...(params.type && { type: params.type })
+      };
+
+      const response: AxiosResponse<GHLFormsListResponse> = await this.axiosInstance.get(
+        '/forms/',
+        { params: queryParams }
+      );
+
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Get a single form by ID (attempts GET /forms/{formId}).
+   * If the API does not support this, use listForms and filter by id.
+   */
+  async getForm(formId: string, locationId?: string): Promise<GHLApiResponse<GHLForm>> {
+    try {
+      const locId = locationId || this.config.locationId;
+      const response: AxiosResponse<GHLForm> = await this.axiosInstance.get(
+        `/forms/${formId}`,
+        { params: { locationId: locId } }
+      );
+
+      return this.wrapResponse(response.data);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Create form — not exposed in the current public Forms API.
+   * Use the HighLevel UI or check marketplace.gohighlevel.com for newer endpoints.
+   */
+  async createForm(_params: unknown): Promise<GHLApiResponse<GHLForm>> {
+    throw new Error(
+      'The HighLevel Forms API does not currently expose form creation in the public Marketplace API. ' +
+      'Create forms in the HighLevel UI (Settings → Forms), or check marketplace.gohighlevel.com for newer endpoints.'
+    );
+  }
+
+  /**
+   * Update form — not exposed in the current public Forms API.
+   */
+  async updateForm(_formId: string, _params: unknown): Promise<GHLApiResponse<GHLForm>> {
+    throw new Error(
+      'The HighLevel Forms API does not currently expose form update in the public Marketplace API. ' +
+      'Edit forms in the HighLevel UI, or check marketplace.gohighlevel.com for newer endpoints.'
+    );
+  }
+
+  /**
+   * Delete form — not exposed in the current public Forms API.
+   */
+  async deleteForm(_formId: string, _locationId?: string): Promise<GHLApiResponse<{ success: boolean }>> {
+    throw new Error(
+      'The HighLevel Forms API does not currently expose form deletion in the public Marketplace API. ' +
+      'Delete forms in the HighLevel UI, or check marketplace.gohighlevel.com for newer endpoints.'
+    );
+  }
+
+  /**
+   * KNOWLEDGE BASE API METHODS (Version 2021-04-15)
+   * See marketplace.gohighlevel.com/docs/ghl/knowledge-base/
+   */
+  private readonly KB_VERSION = '2021-04-15';
+
+  async listKnowledgeBases(params: { locationId?: string; query?: string; limit?: number; lastKnowledgeBaseId?: string }): Promise<GHLApiResponse<GHLKnowledgeBaseListResponse>> {
+    try {
+      const q: Record<string, string | number | undefined> = {
+        locationId: params.locationId || this.config.locationId,
+        limit: params.limit ?? 20,
+        ...(params.query && { query: params.query }),
+        ...(params.lastKnowledgeBaseId && { lastKnowledgeBaseId: params.lastKnowledgeBaseId })
+      };
+      const res = await this.axiosInstance.get<{ success: boolean; data: GHLKnowledgeBaseListResponse }>('/knowledge-bases/', { params: q, headers: { 'Version': this.KB_VERSION } });
+      return this.wrapResponse(res.data.data);
+    } catch (e) { throw e; }
+  }
+
+  async createKnowledgeBase(params: { name: string; description?: string; locationId?: string }): Promise<GHLApiResponse<GHLKnowledgeBase>> {
+    try {
+      const body = { name: params.name, description: params.description, locationId: params.locationId || this.config.locationId };
+      const res = await this.axiosInstance.post<{ success: boolean; data: GHLKnowledgeBase }>('/knowledge-bases/', body, { headers: { 'Version': this.KB_VERSION } });
+      return this.wrapResponse(res.data.data);
+    } catch (e) { throw e; }
+  }
+
+  async getKnowledgeBase(knowledgeBaseId: string): Promise<GHLApiResponse<GHLKnowledgeBase>> {
+    try {
+      const res = await this.axiosInstance.get<{ success: boolean; data: GHLKnowledgeBase }>(`/knowledge-bases/${knowledgeBaseId}`, { headers: { 'Version': this.KB_VERSION } });
+      return this.wrapResponse(res.data.data);
+    } catch (e) { throw e; }
+  }
+
+  async createKbFaq(params: { locationId?: string; question: string; answer: string; knowledgeBaseId: string }): Promise<GHLApiResponse<GHLKbFaq>> {
+    try {
+      const body = { locationId: params.locationId || this.config.locationId, question: params.question, answer: params.answer, knowledgeBaseId: params.knowledgeBaseId };
+      const res = await this.axiosInstance.post<{ success: boolean; faq: GHLKbFaq }>('/knowledge-bases/faqs', body, { headers: { 'Version': this.KB_VERSION } });
+      return this.wrapResponse(res.data.faq);
+    } catch (e) { throw e; }
+  }
+
+  /**
+   * CONVERSATION AI API METHODS (Version 2021-04-15; scopes: conversation-ai.readonly, conversation-ai.write)
+   * See marketplace.gohighlevel.com/docs/ghl/conversation-ai/
+   */
+  async createConversationAIAgent(data: { name: string; personality: string; goal: string; instructions: string; businessName?: string; mode?: string; channels?: string[]; knowledgeBaseIds?: string[]; [k: string]: unknown }): Promise<GHLApiResponse<GHLConversationAIAgent>> {
+    try {
+      const res = await this.axiosInstance.post('/conversation-ai/agents', data, { headers: { 'Version': this.KB_VERSION } });
+      return this.wrapResponse(res.data);
+    } catch (e) { throw e; }
+  }
+
+  async searchConversationAIAgents(params: { startAfter?: string; limit?: number; query?: string }): Promise<GHLApiResponse<GHLConversationAIAgentSearchResponse>> {
+    try {
+      const q: Record<string, string | number | undefined> = {};
+      if (params.startAfter != null) q.startAfter = params.startAfter;
+      if (params.limit != null) q.limit = params.limit;
+      if (params.query != null) q.query = params.query;
+      const res = await this.axiosInstance.get('/conversation-ai/agents/search', { params: q, headers: { 'Version': this.KB_VERSION } });
+      return this.wrapResponse(res.data);
+    } catch (e) { throw e; }
+  }
+
+  async getConversationAIAgent(agentId: string): Promise<GHLApiResponse<GHLConversationAIAgent>> {
+    try {
+      const res = await this.axiosInstance.get(`/conversation-ai/agents/${agentId}`, { headers: { 'Version': this.KB_VERSION } });
+      return this.wrapResponse(res.data);
+    } catch (e) { throw e; }
   }
 
   /**

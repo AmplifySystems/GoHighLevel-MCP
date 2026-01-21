@@ -33,6 +33,9 @@ import { WorkflowTools } from './tools/workflow-tools';
 import { SurveyTools } from './tools/survey-tools';
 import { StoreTools } from './tools/store-tools';
 import { ProductsTools } from './tools/products-tools.js';
+import { FormTools, isFormTool } from './tools/form-tools.js';
+import { KnowledgeBaseTools, isKnowledgeBaseTool } from './tools/knowledge-base-tools.js';
+import { ConversationAITools, isConversationAITool } from './tools/conversation-ai-tools.js';
 import { GHLConfig } from './types/ghl-types';
 
 // Load environment variables
@@ -62,6 +65,9 @@ class GHLMCPHttpServer {
   private surveyTools: SurveyTools;
   private storeTools: StoreTools;
   private productsTools: ProductsTools;
+  private formTools: FormTools;
+  private knowledgeBaseTools: KnowledgeBaseTools;
+  private conversationAITools: ConversationAITools;
   private port: number;
 
   constructor() {
@@ -105,6 +111,9 @@ class GHLMCPHttpServer {
     this.surveyTools = new SurveyTools(this.ghlClient);
     this.storeTools = new StoreTools(this.ghlClient);
     this.productsTools = new ProductsTools(this.ghlClient);
+    this.formTools = new FormTools(this.ghlClient);
+    this.knowledgeBaseTools = new KnowledgeBaseTools(this.ghlClient);
+    this.conversationAITools = new ConversationAITools(this.ghlClient);
 
     // Setup MCP handlers
     this.setupMCPHandlers();
@@ -188,6 +197,9 @@ class GHLMCPHttpServer {
         const surveyToolDefinitions = this.surveyTools.getTools();
         const storeToolDefinitions = this.storeTools.getTools();
         const productsToolDefinitions = this.productsTools.getTools();
+        const formToolDefinitions = this.formTools.getTools();
+        const knowledgeBaseToolDefinitions = this.knowledgeBaseTools.getTools();
+        const conversationAIToolDefinitions = this.conversationAITools.getTools();
         
         const allTools = [
           ...contactToolDefinitions,
@@ -206,7 +218,10 @@ class GHLMCPHttpServer {
           ...workflowToolDefinitions,
           ...surveyToolDefinitions,
           ...storeToolDefinitions,
-          ...productsToolDefinitions
+          ...productsToolDefinitions,
+          ...formToolDefinitions,
+          ...knowledgeBaseToolDefinitions,
+          ...conversationAIToolDefinitions
         ];
         
         console.log(`[GHL MCP HTTP] Registered ${allTools.length} tools total`);
@@ -267,6 +282,12 @@ class GHLMCPHttpServer {
           result = await this.storeTools.executeStoreTool(name, args || {});
         } else if (this.isProductsTool(name)) {
           result = await this.productsTools.executeProductsTool(name, args || {});
+        } else if (isFormTool(name)) {
+          result = await this.formTools.executeTool(name, args || {});
+        } else if (isKnowledgeBaseTool(name)) {
+          result = await this.knowledgeBaseTools.executeTool(name, args || {});
+        } else if (isConversationAITool(name)) {
+          result = await this.conversationAITools.executeTool(name, args || {});
         } else {
           throw new Error(`Unknown tool: ${name}`);
         }
@@ -340,10 +361,13 @@ class GHLMCPHttpServer {
         const surveyTools = this.surveyTools.getTools();
         const storeTools = this.storeTools.getTools();
         const productsTools = this.productsTools.getTools();
+        const formTools = this.formTools.getTools();
+        const knowledgeBaseTools = this.knowledgeBaseTools.getTools();
+        const conversationAITools = this.conversationAITools.getTools();
         
         res.json({
-          tools: [...contactTools, ...conversationTools, ...blogTools, ...opportunityTools, ...calendarTools, ...emailTools, ...locationTools, ...emailISVTools, ...socialMediaTools, ...mediaTools, ...objectTools, ...associationTools, ...customFieldV2Tools, ...workflowTools, ...surveyTools, ...storeTools, ...productsTools],
-          count: contactTools.length + conversationTools.length + blogTools.length + opportunityTools.length + calendarTools.length + emailTools.length + locationTools.length + emailISVTools.length + socialMediaTools.length + mediaTools.length + objectTools.length + associationTools.length + customFieldV2Tools.length + workflowTools.length + surveyTools.length + storeTools.length + productsTools.length
+          tools: [...contactTools, ...conversationTools, ...blogTools, ...opportunityTools, ...calendarTools, ...emailTools, ...locationTools, ...emailISVTools, ...socialMediaTools, ...mediaTools, ...objectTools, ...associationTools, ...customFieldV2Tools, ...workflowTools, ...surveyTools, ...storeTools, ...productsTools, ...formTools, ...knowledgeBaseTools, ...conversationAITools],
+          count: contactTools.length + conversationTools.length + blogTools.length + opportunityTools.length + calendarTools.length + emailTools.length + locationTools.length + emailISVTools.length + socialMediaTools.length + mediaTools.length + objectTools.length + associationTools.length + customFieldV2Tools.length + workflowTools.length + surveyTools.length + storeTools.length + productsTools.length + formTools.length + knowledgeBaseTools.length + conversationAITools.length
         });
       } catch (error) {
         res.status(500).json({ error: 'Failed to list tools' });
@@ -426,6 +450,9 @@ class GHLMCPHttpServer {
       surveys: this.surveyTools.getTools().length,
       store: this.storeTools.getTools().length,
       products: this.productsTools.getTools().length,
+      form: this.formTools.getTools().length,
+      knowledgeBase: this.knowledgeBaseTools.getTools().length,
+      conversationAI: this.conversationAITools.getTools().length,
       total: this.contactTools.getToolDefinitions().length + 
              this.conversationTools.getToolDefinitions().length + 
              this.blogTools.getToolDefinitions().length +
@@ -442,7 +469,10 @@ class GHLMCPHttpServer {
              this.workflowTools.getTools().length +
              this.surveyTools.getTools().length +
              this.storeTools.getTools().length +
-             this.productsTools.getTools().length
+             this.productsTools.getTools().length +
+             this.formTools.getTools().length +
+             this.knowledgeBaseTools.getTools().length +
+             this.conversationAITools.getTools().length
     };
   }
 

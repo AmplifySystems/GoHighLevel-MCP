@@ -32,6 +32,7 @@ export interface MCPListFormsParams {
   locationId?: string;
   limit?: number;
   skip?: number;
+  type?: string;
 }
 
 export interface MCPDeleteFormParams {
@@ -193,6 +194,10 @@ export class FormTools {
             skip: {
               type: 'number',
               description: 'Number of records to skip for pagination (default: 0)'
+            },
+            type: {
+              type: 'string',
+              description: 'Optional filter by type (e.g. "folder")'
             }
           },
           additionalProperties: false
@@ -251,102 +256,76 @@ export class FormTools {
 
   /**
    * Create a new form
+   * Note: HighLevel public Forms API does not expose create; this calls the client which throws a clear error.
    */
   private async createForm(params: MCPCreateFormParams): Promise<any> {
     try {
-      // TODO: Implement getLocationId method in API client
-      // For now, require locationId as parameter
-      const locationId = params.locationId || (this.apiClient as any).config?.locationId;
-      if (!locationId) {
-        throw new Error('Location ID is required. Please provide locationId parameter.');
-      }
-
-      // TODO: Implement createForm method in API client
-      // For now, this is a placeholder
-      throw new Error('Form creation not yet implemented in API client. This feature is coming soon.');
+      const res = await this.apiClient.createForm(params);
+      return res.data;
     } catch (error) {
       console.error('Error creating form:', error);
-      throw new Error(`Failed to create form: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw error instanceof Error ? error : new Error(`Failed to create form: ${String(error)}`);
     }
   }
 
   /**
    * Update an existing form
+   * Note: HighLevel public Forms API does not expose update; this calls the client which throws a clear error.
    */
   private async updateForm(params: MCPUpdateFormParams): Promise<any> {
     try {
-      // TODO: Implement getLocationId method in API client
-      // For now, require locationId as parameter
-      const locationId = params.locationId || (this.apiClient as any).config?.locationId;
-      if (!locationId) {
-        throw new Error('Location ID is required. Please provide locationId parameter.');
-      }
-
-      // TODO: Implement updateForm method in API client
-      throw new Error('Form update not yet implemented in API client. This feature is coming soon.');
+      const res = await this.apiClient.updateForm(params.formId, params);
+      return res.data;
     } catch (error) {
       console.error('Error updating form:', error);
-      throw new Error(`Failed to update form: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw error instanceof Error ? error : new Error(`Failed to update form: ${String(error)}`);
     }
   }
 
   /**
-   * Get form details
+   * Get form details by ID
    */
   private async getForm(params: MCPGetFormParams): Promise<any> {
     try {
-      // TODO: Implement getLocationId method in API client
-      // For now, require locationId as parameter
-      const locationId = params.locationId || (this.apiClient as any).config?.locationId;
-      if (!locationId) {
-        throw new Error('Location ID is required. Please provide locationId parameter.');
-      }
-
-      // TODO: Implement getForm method in API client
-      throw new Error('Form retrieval not yet implemented in API client. This feature is coming soon.');
+      const locationId = params.locationId || this.apiClient.getConfig().locationId;
+      const res = await this.apiClient.getForm(params.formId, locationId);
+      return res.data;
     } catch (error) {
       console.error('Error getting form:', error);
-      throw new Error(`Failed to get form: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw error instanceof Error ? error : new Error(`Failed to get form: ${String(error)}`);
     }
   }
 
   /**
-   * List all forms
+   * List all forms for a location
    */
   private async listForms(params: MCPListFormsParams): Promise<any> {
     try {
-      // TODO: Implement getLocationId method in API client
-      // For now, require locationId as parameter
-      const locationId = params.locationId || (this.apiClient as any).config?.locationId;
-      if (!locationId) {
-        throw new Error('Location ID is required. Please provide locationId parameter.');
-      }
-
-      // TODO: Implement listForms method in API client
-      throw new Error('Form listing not yet implemented in API client. This feature is coming soon.');
+      const locationId = params.locationId || this.apiClient.getConfig().locationId;
+      const res = await this.apiClient.listForms({
+        locationId,
+        skip: params.skip ?? 0,
+        limit: params.limit ?? 50,
+        type: params.type
+      });
+      return res.data;
     } catch (error) {
       console.error('Error listing forms:', error);
-      throw new Error(`Failed to list forms: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw error instanceof Error ? error : new Error(`Failed to list forms: ${String(error)}`);
     }
   }
 
   /**
    * Delete a form
+   * Note: HighLevel public Forms API does not expose delete; this calls the client which throws a clear error.
    */
   private async deleteForm(params: MCPDeleteFormParams): Promise<any> {
     try {
-      // TODO: Implement getLocationId method in API client
-      // For now, require locationId as parameter
-      const locationId = params.locationId || (this.apiClient as any).config?.locationId;
-      if (!locationId) {
-        throw new Error('Location ID is required. Please provide locationId parameter.');
-      }
-
-      // TODO: Implement deleteForm method in API client
-      throw new Error('Form deletion not yet implemented in API client. This feature is coming soon.');
+      const res = await this.apiClient.deleteForm(params.formId, params.locationId);
+      return res.data;
     } catch (error) {
       console.error('Error deleting form:', error);
-      throw new Error(`Failed to delete form: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw error instanceof Error ? error : new Error(`Failed to delete form: ${String(error)}`);
     }
   }
 }

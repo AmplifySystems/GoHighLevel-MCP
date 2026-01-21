@@ -34,6 +34,9 @@ import { GHLConfig } from './types/ghl-types';
 import { ProductsTools } from './tools/products-tools.js';
 import { PaymentsTools } from './tools/payments-tools.js';
 import { InvoicesTools } from './tools/invoices-tools.js';
+import { FormTools, isFormTool } from './tools/form-tools.js';
+import { KnowledgeBaseTools, isKnowledgeBaseTool } from './tools/knowledge-base-tools.js';
+import { ConversationAITools, isConversationAITool } from './tools/conversation-ai-tools.js';
 
 // Load environment variables
 dotenv.config();
@@ -63,6 +66,9 @@ class GHLMCPServer {
   private productsTools: ProductsTools;
   private paymentsTools: PaymentsTools;
   private invoicesTools: InvoicesTools;
+  private formTools: FormTools;
+  private knowledgeBaseTools: KnowledgeBaseTools;
+  private conversationAITools: ConversationAITools;
 
   constructor() {
     // Initialize MCP server with capabilities
@@ -101,6 +107,9 @@ class GHLMCPServer {
     this.productsTools = new ProductsTools(this.ghlClient);
     this.paymentsTools = new PaymentsTools(this.ghlClient);
     this.invoicesTools = new InvoicesTools(this.ghlClient);
+    this.formTools = new FormTools(this.ghlClient);
+    this.knowledgeBaseTools = new KnowledgeBaseTools(this.ghlClient);
+    this.conversationAITools = new ConversationAITools(this.ghlClient);
 
     // Setup MCP handlers
     this.setupHandlers();
@@ -163,6 +172,9 @@ class GHLMCPServer {
         const productsToolDefinitions = this.productsTools.getTools();
         const paymentsToolDefinitions = this.paymentsTools.getTools();
         const invoicesToolDefinitions = this.invoicesTools.getTools();
+        const formToolDefinitions = this.formTools.getTools();
+        const knowledgeBaseToolDefinitions = this.knowledgeBaseTools.getTools();
+        const conversationAIToolDefinitions = this.conversationAITools.getTools();
         
         const allTools = [
           ...contactToolDefinitions,
@@ -183,7 +195,10 @@ class GHLMCPServer {
           ...storeToolDefinitions,
           ...productsToolDefinitions,
           ...paymentsToolDefinitions,
-          ...invoicesToolDefinitions
+          ...invoicesToolDefinitions,
+          ...formToolDefinitions,
+          ...knowledgeBaseToolDefinitions,
+          ...conversationAIToolDefinitions
         ];
         
         process.stderr.write(`[GHL MCP] Registered ${allTools.length} tools total:\n`);
@@ -206,6 +221,9 @@ class GHLMCPServer {
         process.stderr.write(`[GHL MCP] - ${productsToolDefinitions.length} products tools\n`);
         process.stderr.write(`[GHL MCP] - ${paymentsToolDefinitions.length} payments tools\n`);
         process.stderr.write(`[GHL MCP] - ${invoicesToolDefinitions.length} invoices tools\n`);
+        process.stderr.write(`[GHL MCP] - ${formToolDefinitions.length} form tools\n`);
+        process.stderr.write(`[GHL MCP] - ${knowledgeBaseToolDefinitions.length} knowledge base tools\n`);
+        process.stderr.write(`[GHL MCP] - ${conversationAIToolDefinitions.length} conversation AI tools\n`);
         
         return {
           tools: allTools
@@ -268,6 +286,12 @@ class GHLMCPServer {
           result = await this.paymentsTools.handleToolCall(name, args || {});
         } else if (this.isInvoicesTool(name)) {
           result = await this.invoicesTools.handleToolCall(name, args || {});
+        } else if (isFormTool(name)) {
+          result = await this.formTools.executeTool(name, args || {});
+        } else if (isKnowledgeBaseTool(name)) {
+          result = await this.knowledgeBaseTools.executeTool(name, args || {});
+        } else if (isConversationAITool(name)) {
+          result = await this.conversationAITools.executeTool(name, args || {});
         } else {
           throw new Error(`Unknown tool: ${name}`);
         }

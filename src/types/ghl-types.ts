@@ -811,6 +811,86 @@ export interface GHLCheckUrlSlugRequest {
   postId?: string;
 }
 
+// Forms API (GET /forms/ - scope: forms.readonly)
+export interface GHLForm {
+  id: string;
+  name: string;
+  locationId: string;
+}
+
+export interface GHLFormsListResponse {
+  forms: GHLForm[];
+  total: number;
+}
+
+export interface GHLListFormsRequest {
+  locationId?: string;
+  skip?: number;
+  limit?: number;
+  type?: string;
+}
+
+// Knowledge Base API (Version 2021-04-15)
+export interface GHLKnowledgeBase {
+  id: string;
+  name: string;
+  nameLowerCase?: string;
+  locationId: string;
+  description?: string;
+  kbMetadata?: { faqs?: number; urls?: number; richText?: number; files?: number; webSearches?: number; tables?: number };
+  deleted?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  isDefault?: boolean;
+}
+
+export interface GHLKnowledgeBaseListResponse {
+  knowledgeBases: Array<{ id: string; name: string; createdAt?: string }>;
+  activeCount: number;
+  hasMore: boolean;
+  lastKnowledgeBaseId?: string;
+}
+
+export interface GHLKbFaq {
+  id: string;
+  question: string;
+  answer: string;
+  knowledgeBaseId: string;
+  locationId: string;
+  deleted?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Conversation AI API (Version 2021-04-15, scope: conversation-ai.readonly / conversation-ai.write)
+export interface GHLConversationAIAgent {
+  id: string;
+  name: string;
+  businessName?: string;
+  mode?: string;
+  channels?: string[];
+  goal?: object | string;
+  personality?: string;
+  instructions?: string;
+  knowledgeBaseIds?: string[];
+  isPrimary?: boolean;
+  waitTime?: number;
+  waitTimeUnit?: string;
+  sleepEnabled?: boolean;
+  sleepTime?: number;
+  sleepTimeUnit?: string;
+  autoPilotMaxMessages?: number;
+  actions?: Array<{ id: string; type: string }>;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface GHLConversationAIAgentSearchResponse {
+  agents: GHLConversationAIAgent[];
+  totalCount: number;
+  count: number;
+}
+
 // MCP Tool Parameters - Blog Operations
 export interface MCPCreateBlogPostParams {
   title: string;

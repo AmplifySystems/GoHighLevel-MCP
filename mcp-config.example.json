@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "amplify-os-ghl-mcp": {
+      "command": "node",
+      "args": ["/FULL/PATH/TO/amplify-os-ghl-mcp/dist/server.js"],
+      "env": {
+        "GHL_API_KEY": "<Private Integrations API key from GHL>",
+        "GHL_LOCATION_ID": "<Location ID from GHL Settings → Company → Locations>",
+        "GHL_BASE_URL": "https://services.leadconnectorhq.com"
+      }
+    }
+  }
+}

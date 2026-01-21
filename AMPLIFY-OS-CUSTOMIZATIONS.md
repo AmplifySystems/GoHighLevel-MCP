@@ -48,7 +48,7 @@ This document tracks all **custom modifications** made to the upstream GoHighLev
 - Dynamic form creation for partner accounts
 - Form deployment across locations
 
-**Status**: 🔨 **In Development**
+**Status**: ✅ **Registered** in `server.ts` and `http-server.ts`. Form API methods in `ghl-api-client` may still need to be added for full runtime support (create/update/get/list/delete).
 
 ---
 
