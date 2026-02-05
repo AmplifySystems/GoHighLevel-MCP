@@ -10,7 +10,7 @@ tags:
 - mcp
 - cursor
 - configuration
-file_path: 0_amplify-systems/backend/mcp-servers/GoHighLevel-MCP/docs/amplify-os/SETUP-GUIDE.md
+file_path: 0_amplify-systems/backend/mcp-servers/amplify-os-ghl-mcp/docs/amplify-os/SETUP-GUIDE.md
 ---
 
 # AmplifyOS MCP Server Setup Guide
@@ -24,7 +24,7 @@ file_path: 0_amplify-systems/backend/mcp-servers/GoHighLevel-MCP/docs/amplify-os
 ### Step 1: Build the Server
 
 ```bash
-cd 0_amplify-systems/backend/mcp-servers/GoHighLevel-MCP
+cd 0_amplify-systems/backend/mcp-servers/amplify-os-ghl-mcp
 npm install
 npm run build
 ```
@@ -39,11 +39,11 @@ Edit `.cursor/mcp.json` and add/update:
     "amplify-os-ghl-mcp": {
       "command": "node",
       "args": [
-        "/Users/skyfresh/Documents/GitHub/FreshHouse-Network/0_amplify-systems/backend/mcp-servers/GoHighLevel-MCP/dist/server.js"
+        "/Users/skyfresh/Documents/GitHub/FreshHouse-Network/0_amplify-systems/backend/mcp-servers/amplify-os-ghl-mcp/dist/server.js"
       ],
       "env": {
-        "GHL_API_KEY": "pit-79b95771-95fb-42d4-8905-f2d6178cb38b",
-        "GHL_LOCATION_ID": "t56PccdwRwF55nnFRWJ4",
+        "GHL_API_KEY": "<your-private-integration-token-from-highlevel>",
+        "GHL_LOCATION_ID": "<your-location-id-from-highlevel>",
         "GHL_BASE_URL": "https://services.leadconnectorhq.com"
       }
     }
@@ -69,7 +69,7 @@ Edit `.cursor/mcp.json` and add/update:
 
 1. **Check Build**:
    ```bash
-   cd 0_amplify-systems/backend/mcp-servers/GoHighLevel-MCP
+   cd 0_amplify-systems/backend/mcp-servers/amplify-os-ghl-mcp
    npm run build
    ```
 
@@ -130,5 +130,5 @@ Edit `.cursor/mcp.json` and add/update:
 
 ---
 
-**Last Updated**: 2025-01-31
+**Last Updated**: 2026-02-05 — Paths aligned with FreshHouse-Network submodule name `amplify-os-ghl-mcp`; placeholders for secrets (no credentials in repo).
 
