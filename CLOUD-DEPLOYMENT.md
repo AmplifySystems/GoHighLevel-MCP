@@ -1,3 +1,14 @@
+---
+title: "CLOUD DEPLOYMENT"
+status: current
+version: 1.0
+modules:
+  - amplify-systems
+topics:
+  - deployment
+current_as_of: 2026-03-30
+---
+
 # 🚀 Cloud Deployment Guide - ChatGPT Integration
 
 ## 🎯 Overview

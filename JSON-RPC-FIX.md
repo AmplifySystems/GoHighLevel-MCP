@@ -1,3 +1,14 @@
+---
+title: "JSON RPC FIX"
+status: current
+version: 1.0
+modules:
+  - amplify-systems
+topics:
+  - troubleshooting
+current_as_of: 2026-03-30
+---
+
 # JSON-RPC 2.0 Response Function Fix
 
 ## Issue Summary

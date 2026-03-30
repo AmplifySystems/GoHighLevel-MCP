@@ -1,3 +1,14 @@
+---
+title: "FAVICON HANDLING FIX"
+status: current
+version: 1.0
+modules:
+  - amplify-systems
+topics:
+  - troubleshooting
+current_as_of: 2026-03-30
+---
+
 # Favicon Handling Fix
 
 ## Issue Summary

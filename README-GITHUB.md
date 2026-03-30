@@ -1,3 +1,12 @@
+---
+title: "README GITHUB"
+status: current
+version: 1.0
+modules:
+  - amplify-systems
+current_as_of: 2026-03-30
+---
+
 # 🚀 GoHighLevel MCP Server
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/mastanley13/GoHighLevel-MCP)

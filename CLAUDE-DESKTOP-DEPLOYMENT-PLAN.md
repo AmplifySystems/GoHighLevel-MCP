@@ -1,3 +1,14 @@
+---
+title: "CLAUDE DESKTOP DEPLOYMENT PLAN"
+status: current
+version: 1.0
+modules:
+  - amplify-systems
+topics:
+  - deployment
+current_as_of: 2026-03-30
+---
+
 # 🚀 Claude Desktop + GoHighLevel MCP Server Deployment Plan
 
 > **GOAL**: Deploy your GoHighLevel MCP server to work flawlessly with Claude Desktop, giving Claude access to all 21 GoHighLevel tools for contact management, messaging, and blog operations.
