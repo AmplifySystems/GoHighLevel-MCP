@@ -8,6 +8,14 @@
  * Usage: call `provision_quan_partner_schema` with a locationId to
  * bootstrap a partner for Quan Intelligence in under 60 seconds.
  *
+ * ⚠️  LOCATION ID RULES — READ BEFORE CALLING:
+ *   - ALWAYS pass an explicit `locationId` — never rely on env default
+ *   - Quan sub-account (Quan Intelligence layer):  j19Sy6eFsia56BDOTVrE  → use ghl-crm-quan MCP
+ *   - Amplify Systems sub-account (AS ops):        t56PccdwRwF55nnFRWJ4  → use ghl-crm-as-write MCP
+ *   - New partner provisioning: pass the partner's own sub-account locationId
+ *   - GHL has NO delete_object_schema API — wrong-location deploys require manual GHL UI cleanup
+ *   - Registry: 0_amplify-systems/backend/mcp-servers/ghl-mcp/docs/GHL-MCP-LOCATION-REGISTRY.md
+ *
  * Schema keys deployed:
  *   custom_objects.quan_profile   — per-contact intelligence snapshot
  *   custom_objects.quan_brand     — partner brand configuration (1 per location)
