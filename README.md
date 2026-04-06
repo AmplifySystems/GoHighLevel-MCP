@@ -4,7 +4,15 @@ status: current
 version: 1.0
 modules:
   - amplify-systems
-current_as_of: 2026-03-30
+current_as_of: 2026-04-03
+---
+
+## Amplify OS GHL MCP (naming)
+
+This package is **Amplify OS GHL MCP** (short: **AOS GHL MCP**): GoHighLevel API access plus Amplify OS campaign and deployment documentation under [`docs/amplify-os/`](docs/amplify-os/).
+
+It is **not** [**n8n Builder MCP**](../n8n-mcp-enhanced/README.md) (`n8n-mcp-enhanced`, Cursor key `n8n-builder`), which drives the **n8n** Public API (workflows, activate, repo merge). For a side-by-side table, see [AGENTS.md](../../../../AGENTS.md) (section **MCP names — n8n “Builder” vs GHL**).
+
 ---
 
 **Instead of trying to tackle this ---- use our hosted version --- GHL Agent Framework, One Click to Sign in!**
@@ -104,6 +112,7 @@ This comprehensive MCP (Model Context Protocol) server connects Claude Desktop d
 - **💰 Sales & Revenue**: Opportunities, payments, invoices, estimates, and billing automation
 - **📱 Marketing Automation**: Social media, email campaigns, blog management, and media library
 - **🛒 E-commerce**: Store management, products, inventory, shipping, and order fulfillment
+- **🔗 App deep links (no GHL API call):** MCP tool `build_highlevel_app_url` builds `app.amplifysystems.io` URLs for contacts, workflows, funnels, settings pages — templates in [GHL-APP-DEEP-LINK-TEMPLATES.md](docs/amplify-os/GHL-APP-DEEP-LINK-TEMPLATES.md); Cursor skill `.cursor/skills/ghl-app-deep-links/SKILL.md`.
 
 ## ⚡ Quick Deploy Options
 
@@ -130,7 +139,11 @@ This comprehensive MCP (Model Context Protocol) server connects Claude Desktop d
 - ✅ Auto-deploy from GitHub
 - ✅ Built-in SSL
 
-## 🌟 Complete Tool Catalog (269 Tools)
+## 🌟 Complete Tool Catalog (270+ Tools)
+
+### 🔗 App URLs (1 Tool)
+
+- **`build_highlevel_app_url`** — Returns clickable HighLevel app URLs. For contacts use **`contact_detail`** or **`contact_detail_v2`** (v2 path only in canonical docs). See [GHL-APP-DEEP-LINK-TEMPLATES.md](docs/amplify-os/GHL-APP-DEEP-LINK-TEMPLATES.md).
 
 ### 🎯 Contact Management (31 Tools)
 **Core Operations:**
@@ -190,10 +203,15 @@ This comprehensive MCP (Model Context Protocol) server connects Claude Desktop d
 **Schedule Control:**
 - `create_block_slot`, `update_block_slot` - Time blocking
 
-### 📧 Email Marketing (5 Tools)
+### 📧 Email Marketing (6 Tools)
 - `get_email_campaigns` - Campaign management
-- `create_email_template`, `get_email_templates` - Template system
+- `render_simple_email_html` - **No API call** — builds minimal mobile-safe HTML (~18px body, Verdana) for workflow/campaign email; preserves GHL merge tags; pass output to `create_email_template`
+- `create_email_template`, `get_email_templates` - Template system (optional `subjectLine`, `previewText` on create when API accepts)
 - `update_email_template`, `delete_email_template`
+
+**Runbook (Hidden Profit):** [HP-GHL-SNIPPETS-TEMPLATES-MCP-RUNBOOK.md](../../../partners/amplify-systems/campaigns/hidden-profit/docs/HP-GHL-SNIPPETS-TEMPLATES-MCP-RUNBOOK.md).
+
+**Campaign docs = linear GHL runbooks:** When generating workflow specs from markdown, follow [GHL-LINEAR-RUNBOOK-AUTHORING-STANDARD.md](../../../docs/protocols/GHL-LINEAR-RUNBOOK-AUTHORING-STANDARD.md) — **Trigger → every Action in canvas order** with **GHL UI labels** (`If / Else`, `Wait`, `Send Email`, etc.); **GHL workflow title** more prominent than internal “Workflow 8x” anchors.
 
 ### 🏢 Location Management (24 Tools)
 **Sub-Account Management:**
@@ -546,7 +564,9 @@ ghl-mcp-server/
 │   │   ├── blog-tools.ts      # Blog management (7 tools)
 │   │   ├── opportunity-tools.ts # Sales pipeline (10 tools)
 │   │   ├── calendar-tools.ts  # Appointments (14 tools)
-│   │   ├── email-tools.ts     # Email marketing (5 tools)
+│   │   ├── email-tools.ts     # Email marketing (incl. render_simple_email_html)
+│   │   ├── utils/
+│   │   │   └── simple-email-html.ts
 │   │   ├── location-tools.ts  # Location management (24 tools)
 │   │   ├── email-isv-tools.ts # Email verification (1 tool)
 │   │   ├── social-media-tools.ts # Social media (17 tools)

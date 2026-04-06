@@ -76,6 +76,8 @@ This document tracks all **custom modifications** made to the upstream GoHighLev
 
 ---
 
+---
+
 ## 📁 File Structure
 
 ### Custom Files Added
@@ -97,7 +99,8 @@ GoHighLevel-MCP/
 
 ### Modified Files
 
-**None yet** - All customizations are in new files to minimize merge conflicts.
+- `src/server.ts` — Added QuanProvisioningTools import, instantiation, ListTools registration, and executeTool dispatch
+- `src/http-server.ts` — Same additions as server.ts for HTTP transport path
 
 ---
 
@@ -124,6 +127,12 @@ See `docs/amplify-os/MAINTENANCE-GUIDE.md` for detailed merge instructions.
 ---
 
 ## 📝 Change Log
+
+### 2026-04-06
+- ✅ Built `quan-provisioning-tools.ts` — 5 tools for Quan Intelligence provisioning (provision schema, status check, contact sync, session log, brand config)
+- ✅ Registered in `server.ts` and `http-server.ts`
+- ✅ Defined `custom_objects.quan_profile`, `custom_objects.quan_brand`, `custom_objects.quan_session` canonical schemas
+- ✅ Architecture doc: [QUAN-GHL-CUSTOM-OBJECTS-AI-STUDIO-QLF-ARCHITECTURE.md](../../../../docs/architecture/QUAN-GHL-CUSTOM-OBJECTS-AI-STUDIO-QLF-ARCHITECTURE.md)
 
 ### 2025-01-31
 - ✅ Forked repository from mastanley13/GoHighLevel-MCP

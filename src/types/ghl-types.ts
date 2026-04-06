@@ -1557,6 +1557,10 @@ export interface MCPCreateEmailTemplateParams {
   title: string;
   html: string;
   isPlainText?: boolean;
+  /** Optional — passed through to POST /emails/builder when supported */
+  subjectLine?: string;
+  /** Optional preheader / preview text */
+  previewText?: string;
 }
 
 export interface MCPGetEmailTemplatesParams {

@@ -17,6 +17,18 @@ file_path: 0_amplify-systems/backend/mcp-servers/GoHighLevel-MCP/docs/amplify-os
 
 ---
 
+## 2026-04-03 - Simple email HTML helper + template create options
+
+### Added
+- `render_simple_email_html` MCP tool — wraps body copy in minimal responsive HTML (~18px, Verdana) without calling GHL; merge tags preserved when not using plain-text mode.
+- `src/utils/simple-email-html.ts` — shared builder for the above.
+
+### Changed
+- `create_email_template` — optional `subjectLine` and `previewText` forwarded in POST body when supported.
+- README — Email Marketing section documents the helper + link to [HP-GHL-SNIPPETS-TEMPLATES-MCP-RUNBOOK.md](../../../../partners/amplify-systems/campaigns/hidden-profit/docs/HP-GHL-SNIPPETS-TEMPLATES-MCP-RUNBOOK.md).
+
+---
+
 ## 2025-01-31 - Initial Fork & Form Tools
 
 ### Added

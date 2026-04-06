@@ -37,6 +37,8 @@ import { InvoicesTools } from './tools/invoices-tools.js';
 import { FormTools, isFormTool } from './tools/form-tools.js';
 import { KnowledgeBaseTools, isKnowledgeBaseTool } from './tools/knowledge-base-tools.js';
 import { ConversationAITools, isConversationAITool } from './tools/conversation-ai-tools.js';
+import { QuanProvisioningTools, isQuanProvisioningTool } from './tools/quan-provisioning-tools.js';
+import { APP_URL_TOOL_DEFINITIONS, executeAppUrlTool } from './tools/app-url-tools.js';
 
 // Load environment variables
 dotenv.config();
@@ -69,6 +71,7 @@ class GHLMCPServer {
   private formTools: FormTools;
   private knowledgeBaseTools: KnowledgeBaseTools;
   private conversationAITools: ConversationAITools;
+  private quanProvisioningTools: QuanProvisioningTools;
 
   constructor() {
     // Initialize MCP server with capabilities
@@ -110,6 +113,7 @@ class GHLMCPServer {
     this.formTools = new FormTools(this.ghlClient);
     this.knowledgeBaseTools = new KnowledgeBaseTools(this.ghlClient);
     this.conversationAITools = new ConversationAITools(this.ghlClient);
+    this.quanProvisioningTools = new QuanProvisioningTools(this.ghlClient);
 
     // Setup MCP handlers
     this.setupHandlers();
@@ -177,6 +181,7 @@ class GHLMCPServer {
         const conversationAIToolDefinitions = this.conversationAITools.getTools();
         
         const allTools = [
+          ...APP_URL_TOOL_DEFINITIONS,
           ...contactToolDefinitions,
           ...conversationToolDefinitions,
           ...blogToolDefinitions,
@@ -198,7 +203,8 @@ class GHLMCPServer {
           ...invoicesToolDefinitions,
           ...formToolDefinitions,
           ...knowledgeBaseToolDefinitions,
-          ...conversationAIToolDefinitions
+          ...conversationAIToolDefinitions,
+          ...this.quanProvisioningTools.getTools()
         ];
         
         process.stderr.write(`[GHL MCP] Registered ${allTools.length} tools total:\n`);
@@ -248,7 +254,9 @@ class GHLMCPServer {
         let result: any;
 
         // Route to appropriate tool handler
-        if (this.isContactTool(name)) {
+        if (name === 'build_highlevel_app_url') {
+          result = executeAppUrlTool(name, args || {});
+        } else if (this.isContactTool(name)) {
           result = await this.contactTools.executeTool(name, args || {});
         } else if (this.isConversationTool(name)) {
           result = await this.conversationTools.executeTool(name, args || {});
@@ -292,6 +300,8 @@ class GHLMCPServer {
           result = await this.knowledgeBaseTools.executeTool(name, args || {});
         } else if (isConversationAITool(name)) {
           result = await this.conversationAITools.executeTool(name, args || {});
+        } else if (isQuanProvisioningTool(name)) {
+          result = await this.quanProvisioningTools.executeTool(name, args || {});
         } else {
           throw new Error(`Unknown tool: ${name}`);
         }
@@ -414,7 +424,7 @@ class GHLMCPServer {
    */
   private isEmailTool(toolName: string): boolean {
     const emailToolNames = [
-      'get_email_campaigns', 'create_email_template', 'get_email_templates', 
+      'get_email_campaigns', 'create_email_template', 'render_simple_email_html', 'get_email_templates',
       'update_email_template', 'delete_email_template'
     ];
     return emailToolNames.includes(toolName);
@@ -743,6 +753,7 @@ class GHLMCPServer {
       process.stderr.write('📧 EMAIL MARKETING:\n');
       process.stderr.write('   • get_email_campaigns - Get list of email campaigns\n');
       process.stderr.write('   • create_email_template - Create a new email template\n');
+      process.stderr.write('   • render_simple_email_html - Build ~18px minimal HTML for templates (no API call)\n');
       process.stderr.write('   • get_email_templates - Get list of email templates\n');
       process.stderr.write('   • update_email_template - Update an existing email template\n');
       process.stderr.write('   • delete_email_template - Delete an email template\n');

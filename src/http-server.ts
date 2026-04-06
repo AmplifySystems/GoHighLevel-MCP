@@ -36,6 +36,7 @@ import { ProductsTools } from './tools/products-tools.js';
 import { FormTools, isFormTool } from './tools/form-tools.js';
 import { KnowledgeBaseTools, isKnowledgeBaseTool } from './tools/knowledge-base-tools.js';
 import { ConversationAITools, isConversationAITool } from './tools/conversation-ai-tools.js';
+import { QuanProvisioningTools, isQuanProvisioningTool } from './tools/quan-provisioning-tools.js';
 import { GHLConfig } from './types/ghl-types';
 
 // Load environment variables
@@ -68,6 +69,7 @@ class GHLMCPHttpServer {
   private formTools: FormTools;
   private knowledgeBaseTools: KnowledgeBaseTools;
   private conversationAITools: ConversationAITools;
+  private quanProvisioningTools: QuanProvisioningTools;
   private port: number;
 
   constructor() {
@@ -114,6 +116,7 @@ class GHLMCPHttpServer {
     this.formTools = new FormTools(this.ghlClient);
     this.knowledgeBaseTools = new KnowledgeBaseTools(this.ghlClient);
     this.conversationAITools = new ConversationAITools(this.ghlClient);
+    this.quanProvisioningTools = new QuanProvisioningTools(this.ghlClient);
 
     // Setup MCP handlers
     this.setupMCPHandlers();
@@ -288,6 +291,8 @@ class GHLMCPHttpServer {
           result = await this.knowledgeBaseTools.executeTool(name, args || {});
         } else if (isConversationAITool(name)) {
           result = await this.conversationAITools.executeTool(name, args || {});
+        } else if (isQuanProvisioningTool(name)) {
+          result = await this.quanProvisioningTools.executeTool(name, args || {});
         } else {
           throw new Error(`Unknown tool: ${name}`);
         }
