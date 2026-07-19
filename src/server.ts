@@ -638,6 +638,10 @@ class GHLMCPServer {
    * Test GHL API connection
    */
   private async testGHLConnection(): Promise<void> {
+    if (process.env.GHL_MCP_SKIP_CONNECTION_TEST === 'true') {
+      process.stderr.write('[GHL MCP] Skipping startup connection test (GHL_MCP_SKIP_CONNECTION_TEST=true)\n');
+      return;
+    }
     try {
       process.stderr.write('[GHL MCP] Testing GHL API connection...\n');
       
@@ -646,8 +650,11 @@ class GHLMCPServer {
       process.stderr.write('[GHL MCP] ✅ GHL API connection successful\n');
       process.stderr.write(`[GHL MCP] Connected to location: ${result.data?.locationId}\n`);
     } catch (error) {
-      console.error('[GHL MCP] ❌ GHL API connection failed:', error);
-      throw new Error(`Failed to connect to GHL API: ${error}`);
+      // GHL occasionally returns 5xx on /locations/{id}; do not block MCP tools for a blip.
+      console.error('[GHL MCP] ⚠️ GHL API connection test failed (server will still start):', error);
+      process.stderr.write(
+        '[GHL MCP] Retry tools in a minute or set GHL_MCP_SKIP_CONNECTION_TEST=true to silence this check.\n'
+      );
     }
   }
 
