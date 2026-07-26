@@ -13,6 +13,8 @@ This package is **Amplify OS GHL MCP** (short: **AOS GHL MCP**): GoHighLevel API
 
 It is **not** [**n8n Builder MCP**](../n8n-mcp-enhanced/README.md) (`n8n-mcp-enhanced`, Cursor key `n8n-builder`), which drives the **n8n** Public API (workflows, activate, repo merge). For a side-by-side table, see [AGENTS.md](../../../../AGENTS.md) (section **MCP names — n8n “Builder” vs GHL**).
 
+**Tool product specs:** use [`0_amplify-systems/tools/as-ghl-mcp/`](../../../tools/as-ghl-mcp/) for the domain-level power grid: email, Social Planner, Conversation AI / Agent Studio, atomic content order, and multi-tenant license gating.
+
 ---
 
 **Instead of trying to tackle this ---- use our hosted version --- GHL Agent Framework, One Click to Sign in!**
