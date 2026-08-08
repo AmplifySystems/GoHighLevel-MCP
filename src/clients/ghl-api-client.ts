@@ -479,6 +479,73 @@ export class GHLApiClient {
     };
   }
 
+  private withDefaultLocation(params?: Record<string, unknown>): Record<string, unknown> {
+    return {
+      ...(params || {}),
+      locationId: params?.locationId || this.config.locationId
+    };
+  }
+
+  private resolveLocationId(locationId?: string): string {
+    const resolved = locationId || this.config.locationId;
+    if (!resolved) {
+      throw new Error('locationId is required');
+    }
+    return resolved;
+  }
+
+  private normalizeApiPath(path: string): string {
+    if (!path || typeof path !== 'string') {
+      throw new Error('A relative HighLevel API path is required');
+    }
+
+    if (/^https?:\/\//i.test(path)) {
+      throw new Error('Use a relative HighLevel API path, not an absolute URL');
+    }
+
+    const normalized = path.startsWith('/') ? path : `/${path}`;
+    if (normalized.includes('..') || normalized.startsWith('//')) {
+      throw new Error(`Unsafe HighLevel API path: ${path}`);
+    }
+
+    return normalized;
+  }
+
+  /**
+   * Generic official HighLevel API request helper.
+   * This keeps new Marketplace endpoints usable before a typed wrapper exists.
+   */
+  async requestEndpoint(params: {
+    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+    path: string;
+    query?: Record<string, unknown>;
+    body?: unknown;
+    version?: string;
+    includeDefaultLocationId?: boolean;
+  }): Promise<GHLApiResponse<{ status: number; data: unknown }>> {
+    try {
+      const path = this.normalizeApiPath(params.path);
+      const query = params.includeDefaultLocationId === false
+        ? (params.query || {})
+        : this.withDefaultLocation(params.query);
+
+      const response = await this.axiosInstance.request({
+        method: params.method,
+        url: path,
+        params: query,
+        data: params.body,
+        headers: params.version ? { Version: params.version } : undefined
+      });
+
+      return this.wrapResponse({
+        status: response.status,
+        data: response.data
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+
   /**
    * CONTACTS API METHODS
    */
@@ -1253,6 +1320,103 @@ export class GHLApiClient {
   async getConversationAIAgent(agentId: string): Promise<GHLApiResponse<GHLConversationAIAgent>> {
     try {
       const res = await this.axiosInstance.get(`/conversation-ai/agents/${agentId}`, { headers: { 'Version': this.KB_VERSION } });
+      return this.wrapResponse(res.data);
+    } catch (e) { throw e; }
+  }
+
+  /**
+   * FUNNELS API METHODS (Version v3)
+   * See marketplace.gohighlevel.com/docs/ghl/funnels/
+   */
+  async listFunnels(params: Record<string, unknown> = {}): Promise<GHLApiResponse<unknown>> {
+    try {
+      const res = await this.axiosInstance.get('/funnels/funnel/list', {
+        params: this.withDefaultLocation(params),
+        headers: { Version: 'v3' }
+      });
+      return this.wrapResponse(res.data);
+    } catch (e) { throw e; }
+  }
+
+  async getFunnelPages(params: Record<string, unknown>): Promise<GHLApiResponse<unknown>> {
+    try {
+      const res = await this.axiosInstance.get('/funnels/page', {
+        params: this.withDefaultLocation(params),
+        headers: { Version: 'v3' }
+      });
+      return this.wrapResponse(res.data);
+    } catch (e) { throw e; }
+  }
+
+  async getFunnelPagesCount(params: Record<string, unknown>): Promise<GHLApiResponse<unknown>> {
+    try {
+      const res = await this.axiosInstance.get('/funnels/page/count', {
+        params: this.withDefaultLocation(params),
+        headers: { Version: 'v3' }
+      });
+      return this.wrapResponse(res.data);
+    } catch (e) { throw e; }
+  }
+
+  /**
+   * COURSES API METHODS (Version v3)
+   * See marketplace.gohighlevel.com/docs/ghl/courses/import-courses/
+   */
+  async importCourses(params: { body: Record<string, unknown>; version?: string }): Promise<GHLApiResponse<unknown>> {
+    try {
+      const res = await this.axiosInstance.post('/courses/courses-exporter/public/import', params.body, {
+        headers: { Version: params.version || 'v3' }
+      });
+      return this.wrapResponse(res.data);
+    } catch (e) { throw e; }
+  }
+
+  /**
+   * AFFILIATE MANAGER API METHODS (Version v3)
+   * See marketplace.gohighlevel.com/docs/ghl/affiliate-manager/
+   */
+  async listAffiliateManagerAffiliates(params: Record<string, unknown> = {}): Promise<GHLApiResponse<unknown>> {
+    try {
+      const locationId = this.resolveLocationId(typeof params.locationId === 'string' ? params.locationId : undefined);
+      const { locationId: _locationId, ...query } = params;
+      const res = await this.axiosInstance.get(`/affiliate-manager/${locationId}/affiliates`, {
+        params: query,
+        headers: { Version: 'v3' }
+      });
+      return this.wrapResponse(res.data);
+    } catch (e) { throw e; }
+  }
+
+  async getAffiliateManagerAffiliate(affiliateId: string, locationId?: string): Promise<GHLApiResponse<unknown>> {
+    try {
+      const resolvedLocationId = this.resolveLocationId(locationId);
+      const res = await this.axiosInstance.get(`/affiliate-manager/${resolvedLocationId}/affiliates/${affiliateId}`, {
+        headers: { Version: 'v3' }
+      });
+      return this.wrapResponse(res.data);
+    } catch (e) { throw e; }
+  }
+
+  async listAffiliateManagerPayouts(params: Record<string, unknown> = {}): Promise<GHLApiResponse<unknown>> {
+    try {
+      const locationId = this.resolveLocationId(typeof params.locationId === 'string' ? params.locationId : undefined);
+      const { locationId: _locationId, ...query } = params;
+      const res = await this.axiosInstance.get(`/affiliate-manager/${locationId}/payouts`, {
+        params: query,
+        headers: { Version: 'v3' }
+      });
+      return this.wrapResponse(res.data);
+    } catch (e) { throw e; }
+  }
+
+  async listAffiliateManagerCommissions(params: Record<string, unknown> = {}): Promise<GHLApiResponse<unknown>> {
+    try {
+      const locationId = this.resolveLocationId(typeof params.locationId === 'string' ? params.locationId : undefined);
+      const { locationId: _locationId, ...query } = params;
+      const res = await this.axiosInstance.get(`/affiliate-manager/${locationId}/commissions`, {
+        params: query,
+        headers: { Version: 'v3' }
+      });
       return this.wrapResponse(res.data);
     } catch (e) { throw e; }
   }

@@ -39,9 +39,26 @@ import { KnowledgeBaseTools, isKnowledgeBaseTool } from './tools/knowledge-base-
 import { ConversationAITools, isConversationAITool } from './tools/conversation-ai-tools.js';
 import { QuanProvisioningTools, isQuanProvisioningTool } from './tools/quan-provisioning-tools.js';
 import { APP_URL_TOOL_DEFINITIONS, executeAppUrlTool } from './tools/app-url-tools.js';
+import { FunnelTools, isFunnelTool } from './tools/funnel-tools.js';
+import { CourseTools, isCourseTool } from './tools/course-tools.js';
+import { GenericApiTools, isGenericApiTool } from './tools/generic-api-tools.js';
+import { AffiliateManagerTools, isAffiliateManagerTool } from './tools/affiliate-manager-tools.js';
 
 // Load environment variables
 dotenv.config();
+
+function redactForLog(value: unknown): unknown {
+  if (value == null || typeof value !== 'object') return value;
+  if (Array.isArray(value)) return value.map((item) => redactForLog(item));
+
+  const sensitiveKeyPattern = /(authorization|token|secret|password|api[_-]?key|bearer|private[_-]?integration)/i;
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>).map(([key, item]) => [
+      key,
+      sensitiveKeyPattern.test(key) ? '[REDACTED]' : redactForLog(item)
+    ])
+  );
+}
 
 /**
  * Main MCP Server class
@@ -72,6 +89,10 @@ class GHLMCPServer {
   private knowledgeBaseTools: KnowledgeBaseTools;
   private conversationAITools: ConversationAITools;
   private quanProvisioningTools: QuanProvisioningTools;
+  private funnelTools: FunnelTools;
+  private courseTools: CourseTools;
+  private genericApiTools: GenericApiTools;
+  private affiliateManagerTools: AffiliateManagerTools;
 
   constructor() {
     // Initialize MCP server with capabilities
@@ -114,6 +135,10 @@ class GHLMCPServer {
     this.knowledgeBaseTools = new KnowledgeBaseTools(this.ghlClient);
     this.conversationAITools = new ConversationAITools(this.ghlClient);
     this.quanProvisioningTools = new QuanProvisioningTools(this.ghlClient);
+    this.funnelTools = new FunnelTools(this.ghlClient);
+    this.courseTools = new CourseTools(this.ghlClient);
+    this.genericApiTools = new GenericApiTools(this.ghlClient);
+    this.affiliateManagerTools = new AffiliateManagerTools(this.ghlClient);
 
     // Setup MCP handlers
     this.setupHandlers();
@@ -179,12 +204,20 @@ class GHLMCPServer {
         const formToolDefinitions = this.formTools.getTools();
         const knowledgeBaseToolDefinitions = this.knowledgeBaseTools.getTools();
         const conversationAIToolDefinitions = this.conversationAITools.getTools();
+        const funnelToolDefinitions = this.funnelTools.getTools();
+        const courseToolDefinitions = this.courseTools.getTools();
+        const genericApiToolDefinitions = this.genericApiTools.getTools();
+        const affiliateManagerToolDefinitions = this.affiliateManagerTools.getTools();
         
         const allTools = [
           ...APP_URL_TOOL_DEFINITIONS,
+          ...genericApiToolDefinitions,
+          ...affiliateManagerToolDefinitions,
           ...contactToolDefinitions,
           ...conversationToolDefinitions,
           ...blogToolDefinitions,
+          ...funnelToolDefinitions,
+          ...courseToolDefinitions,
           ...opportunityToolDefinitions,
           ...calendarToolDefinitions,
           ...emailToolDefinitions,
@@ -211,6 +244,9 @@ class GHLMCPServer {
         process.stderr.write(`[GHL MCP] - ${contactToolDefinitions.length} contact tools\n`);
         process.stderr.write(`[GHL MCP] - ${conversationToolDefinitions.length} conversation tools\n`);
         process.stderr.write(`[GHL MCP] - ${blogToolDefinitions.length} blog tools\n`);
+        process.stderr.write(`[GHL MCP] - ${funnelToolDefinitions.length} funnel tools\n`);
+        process.stderr.write(`[GHL MCP] - ${courseToolDefinitions.length} course tools\n`);
+        process.stderr.write(`[GHL MCP] - ${affiliateManagerToolDefinitions.length} affiliate manager tools\n`);
         process.stderr.write(`[GHL MCP] - ${opportunityToolDefinitions.length} opportunity tools\n`);
         process.stderr.write(`[GHL MCP] - ${calendarToolDefinitions.length} calendar tools\n`);
         process.stderr.write(`[GHL MCP] - ${emailToolDefinitions.length} email tools\n`);
@@ -230,6 +266,7 @@ class GHLMCPServer {
         process.stderr.write(`[GHL MCP] - ${formToolDefinitions.length} form tools\n`);
         process.stderr.write(`[GHL MCP] - ${knowledgeBaseToolDefinitions.length} knowledge base tools\n`);
         process.stderr.write(`[GHL MCP] - ${conversationAIToolDefinitions.length} conversation AI tools\n`);
+        process.stderr.write(`[GHL MCP] - ${genericApiToolDefinitions.length} generic API tools\n`);
         
         return {
           tools: allTools
@@ -248,7 +285,7 @@ class GHLMCPServer {
       const { name, arguments: args } = request.params;
       
       process.stderr.write(`[GHL MCP] Executing tool: ${name}\n`);
-      process.stderr.write(`[GHL MCP] Arguments: ${JSON.stringify(args, null, 2)}\n`);
+      process.stderr.write(`[GHL MCP] Arguments: ${JSON.stringify(redactForLog(args), null, 2)}\n`);
 
       try {
         let result: any;
@@ -256,12 +293,20 @@ class GHLMCPServer {
         // Route to appropriate tool handler
         if (name === 'build_highlevel_app_url') {
           result = executeAppUrlTool(name, args || {});
+        } else if (isGenericApiTool(name)) {
+          result = await this.genericApiTools.executeTool(name, args || {});
         } else if (this.isContactTool(name)) {
           result = await this.contactTools.executeTool(name, args || {});
         } else if (this.isConversationTool(name)) {
           result = await this.conversationTools.executeTool(name, args || {});
         } else if (this.isBlogTool(name)) {
           result = await this.blogTools.executeTool(name, args || {});
+        } else if (isFunnelTool(name)) {
+          result = await this.funnelTools.executeTool(name, args || {});
+        } else if (isCourseTool(name)) {
+          result = await this.courseTools.executeTool(name, args || {});
+        } else if (isAffiliateManagerTool(name)) {
+          result = await this.affiliateManagerTools.executeTool(name, args || {});
         } else if (this.isOpportunityTool(name)) {
           result = await this.opportunityTools.executeTool(name, args || {});
         } else if (this.isCalendarTool(name)) {
@@ -676,6 +721,9 @@ class GHLMCPServer {
       const contactToolCount = this.contactTools.getToolDefinitions().length;
       const conversationToolCount = this.conversationTools.getToolDefinitions().length;
       const blogToolCount = this.blogTools.getToolDefinitions().length;
+      const funnelToolCount = this.funnelTools.getTools().length;
+      const courseToolCount = this.courseTools.getTools().length;
+      const affiliateManagerToolCount = this.affiliateManagerTools.getTools().length;
       const opportunityToolCount = this.opportunityTools.getToolDefinitions().length;
       const calendarToolCount = this.calendarTools.getToolDefinitions().length;
       const emailToolCount = this.emailTools.getToolDefinitions().length;
@@ -692,7 +740,8 @@ class GHLMCPServer {
       const productsToolCount = this.productsTools.getTools().length;
       const paymentsToolCount = this.paymentsTools.getTools().length;
       const invoicesToolCount = this.invoicesTools.getTools().length;
-      const totalTools = contactToolCount + conversationToolCount + blogToolCount + opportunityToolCount + calendarToolCount + emailToolCount + locationToolCount + emailISVToolCount + socialMediaToolCount + mediaToolCount + objectToolCount + associationToolCount + customFieldV2ToolCount + workflowToolCount + surveyToolCount + storeToolCount + productsToolCount + paymentsToolCount + invoicesToolCount;
+      const genericApiToolCount = this.genericApiTools.getTools().length;
+      const totalTools = contactToolCount + conversationToolCount + blogToolCount + funnelToolCount + courseToolCount + affiliateManagerToolCount + opportunityToolCount + calendarToolCount + emailToolCount + locationToolCount + emailISVToolCount + socialMediaToolCount + mediaToolCount + objectToolCount + associationToolCount + customFieldV2ToolCount + workflowToolCount + surveyToolCount + storeToolCount + productsToolCount + paymentsToolCount + invoicesToolCount + genericApiToolCount;
       
       process.stderr.write(`📋 Available tools: ${totalTools}\n`);
       process.stderr.write('\n');
@@ -726,6 +775,20 @@ class GHLMCPServer {
       process.stderr.write('   • get_blog_authors - Get available blog authors\n');
       process.stderr.write('   • get_blog_categories - Get available blog categories\n');
       process.stderr.write('   • check_url_slug - Validate URL slug availability\n');
+      process.stderr.write('\n');
+      process.stderr.write('🧭 FUNNELS & COURSES:\n');
+      process.stderr.write('   • ghl_list_funnels - List funnels/websites via v3\n');
+      process.stderr.write('   • ghl_list_funnel_pages - List pages for one funnel\n');
+      process.stderr.write('   • ghl_count_funnel_pages - Count pages for one funnel\n');
+      process.stderr.write('   • ghl_list_all_funnel_pages - Build a full funnel page catalog\n');
+      process.stderr.write('   • ghl_import_courses - Import courses via public v3 endpoint\n');
+      process.stderr.write('   • ghl_api_request - Call new official endpoints by relative path\n');
+      process.stderr.write('\n');
+      process.stderr.write('🤝 AFFILIATE MANAGER:\n');
+      process.stderr.write('   • ghl_list_affiliates - List affiliates for a location\n');
+      process.stderr.write('   • ghl_get_affiliate - Get one affiliate by ID\n');
+      process.stderr.write('   • ghl_list_affiliate_payouts - List affiliate payouts\n');
+      process.stderr.write('   • ghl_list_affiliate_commissions - List affiliate commissions\n');
       process.stderr.write('\n');
       process.stderr.write('💰 OPPORTUNITY MANAGEMENT (10 tools):\n');
       process.stderr.write('   SEARCH: search_opportunities - Search by pipeline, stage, status, contact\n');

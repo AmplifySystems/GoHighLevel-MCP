@@ -33,10 +33,17 @@ import { WorkflowTools } from './tools/workflow-tools';
 import { SurveyTools } from './tools/survey-tools';
 import { StoreTools } from './tools/store-tools';
 import { ProductsTools } from './tools/products-tools.js';
+import { PaymentsTools } from './tools/payments-tools.js';
+import { InvoicesTools } from './tools/invoices-tools.js';
 import { FormTools, isFormTool } from './tools/form-tools.js';
 import { KnowledgeBaseTools, isKnowledgeBaseTool } from './tools/knowledge-base-tools.js';
 import { ConversationAITools, isConversationAITool } from './tools/conversation-ai-tools.js';
 import { QuanProvisioningTools, isQuanProvisioningTool } from './tools/quan-provisioning-tools.js';
+import { APP_URL_TOOL_DEFINITIONS, executeAppUrlTool } from './tools/app-url-tools.js';
+import { FunnelTools, isFunnelTool } from './tools/funnel-tools.js';
+import { CourseTools, isCourseTool } from './tools/course-tools.js';
+import { GenericApiTools, isGenericApiTool } from './tools/generic-api-tools.js';
+import { AffiliateManagerTools, isAffiliateManagerTool } from './tools/affiliate-manager-tools.js';
 import { GHLConfig } from './types/ghl-types';
 
 // Load environment variables
@@ -66,10 +73,16 @@ class GHLMCPHttpServer {
   private surveyTools: SurveyTools;
   private storeTools: StoreTools;
   private productsTools: ProductsTools;
+  private paymentsTools: PaymentsTools;
+  private invoicesTools: InvoicesTools;
   private formTools: FormTools;
   private knowledgeBaseTools: KnowledgeBaseTools;
   private conversationAITools: ConversationAITools;
   private quanProvisioningTools: QuanProvisioningTools;
+  private funnelTools: FunnelTools;
+  private courseTools: CourseTools;
+  private genericApiTools: GenericApiTools;
+  private affiliateManagerTools: AffiliateManagerTools;
   private port: number;
 
   constructor() {
@@ -113,10 +126,16 @@ class GHLMCPHttpServer {
     this.surveyTools = new SurveyTools(this.ghlClient);
     this.storeTools = new StoreTools(this.ghlClient);
     this.productsTools = new ProductsTools(this.ghlClient);
+    this.paymentsTools = new PaymentsTools(this.ghlClient);
+    this.invoicesTools = new InvoicesTools(this.ghlClient);
     this.formTools = new FormTools(this.ghlClient);
     this.knowledgeBaseTools = new KnowledgeBaseTools(this.ghlClient);
     this.conversationAITools = new ConversationAITools(this.ghlClient);
     this.quanProvisioningTools = new QuanProvisioningTools(this.ghlClient);
+    this.funnelTools = new FunnelTools(this.ghlClient);
+    this.courseTools = new CourseTools(this.ghlClient);
+    this.genericApiTools = new GenericApiTools(this.ghlClient);
+    this.affiliateManagerTools = new AffiliateManagerTools(this.ghlClient);
 
     // Setup MCP handlers
     this.setupMCPHandlers();
@@ -200,14 +219,25 @@ class GHLMCPHttpServer {
         const surveyToolDefinitions = this.surveyTools.getTools();
         const storeToolDefinitions = this.storeTools.getTools();
         const productsToolDefinitions = this.productsTools.getTools();
+        const paymentsToolDefinitions = this.paymentsTools.getTools();
+        const invoicesToolDefinitions = this.invoicesTools.getTools();
         const formToolDefinitions = this.formTools.getTools();
         const knowledgeBaseToolDefinitions = this.knowledgeBaseTools.getTools();
         const conversationAIToolDefinitions = this.conversationAITools.getTools();
+        const funnelToolDefinitions = this.funnelTools.getTools();
+        const courseToolDefinitions = this.courseTools.getTools();
+        const genericApiToolDefinitions = this.genericApiTools.getTools();
+        const affiliateManagerToolDefinitions = this.affiliateManagerTools.getTools();
         
         const allTools = [
+          ...APP_URL_TOOL_DEFINITIONS,
+          ...genericApiToolDefinitions,
+          ...affiliateManagerToolDefinitions,
           ...contactToolDefinitions,
           ...conversationToolDefinitions,
           ...blogToolDefinitions,
+          ...funnelToolDefinitions,
+          ...courseToolDefinitions,
           ...opportunityToolDefinitions,
           ...calendarToolDefinitions,
           ...emailToolDefinitions,
@@ -222,6 +252,8 @@ class GHLMCPHttpServer {
           ...surveyToolDefinitions,
           ...storeToolDefinitions,
           ...productsToolDefinitions,
+          ...paymentsToolDefinitions,
+          ...invoicesToolDefinitions,
           ...formToolDefinitions,
           ...knowledgeBaseToolDefinitions,
           ...conversationAIToolDefinitions
@@ -251,12 +283,22 @@ class GHLMCPHttpServer {
         let result: any;
 
         // Route to appropriate tool handler
-        if (this.isContactTool(name)) {
+        if (name === 'build_highlevel_app_url') {
+          result = executeAppUrlTool(name, args || {});
+        } else if (isGenericApiTool(name)) {
+          result = await this.genericApiTools.executeTool(name, args || {});
+        } else if (this.isContactTool(name)) {
           result = await this.contactTools.executeTool(name, args || {});
         } else if (this.isConversationTool(name)) {
           result = await this.conversationTools.executeTool(name, args || {});
         } else if (this.isBlogTool(name)) {
           result = await this.blogTools.executeTool(name, args || {});
+        } else if (isFunnelTool(name)) {
+          result = await this.funnelTools.executeTool(name, args || {});
+        } else if (isCourseTool(name)) {
+          result = await this.courseTools.executeTool(name, args || {});
+        } else if (isAffiliateManagerTool(name)) {
+          result = await this.affiliateManagerTools.executeTool(name, args || {});
         } else if (this.isOpportunityTool(name)) {
           result = await this.opportunityTools.executeTool(name, args || {});
         } else if (this.isCalendarTool(name)) {
@@ -285,6 +327,10 @@ class GHLMCPHttpServer {
           result = await this.storeTools.executeStoreTool(name, args || {});
         } else if (this.isProductsTool(name)) {
           result = await this.productsTools.executeProductsTool(name, args || {});
+        } else if (this.isPaymentsTool(name)) {
+          result = await this.paymentsTools.handleToolCall(name, args || {});
+        } else if (this.isInvoicesTool(name)) {
+          result = await this.invoicesTools.handleToolCall(name, args || {});
         } else if (isFormTool(name)) {
           result = await this.formTools.executeTool(name, args || {});
         } else if (isKnowledgeBaseTool(name)) {
@@ -366,13 +412,19 @@ class GHLMCPHttpServer {
         const surveyTools = this.surveyTools.getTools();
         const storeTools = this.storeTools.getTools();
         const productsTools = this.productsTools.getTools();
+        const paymentsTools = this.paymentsTools.getTools();
+        const invoicesTools = this.invoicesTools.getTools();
         const formTools = this.formTools.getTools();
         const knowledgeBaseTools = this.knowledgeBaseTools.getTools();
         const conversationAITools = this.conversationAITools.getTools();
+        const funnelTools = this.funnelTools.getTools();
+        const courseTools = this.courseTools.getTools();
+        const genericApiTools = this.genericApiTools.getTools();
+        const affiliateManagerTools = this.affiliateManagerTools.getTools();
         
         res.json({
-          tools: [...contactTools, ...conversationTools, ...blogTools, ...opportunityTools, ...calendarTools, ...emailTools, ...locationTools, ...emailISVTools, ...socialMediaTools, ...mediaTools, ...objectTools, ...associationTools, ...customFieldV2Tools, ...workflowTools, ...surveyTools, ...storeTools, ...productsTools, ...formTools, ...knowledgeBaseTools, ...conversationAITools],
-          count: contactTools.length + conversationTools.length + blogTools.length + opportunityTools.length + calendarTools.length + emailTools.length + locationTools.length + emailISVTools.length + socialMediaTools.length + mediaTools.length + objectTools.length + associationTools.length + customFieldV2Tools.length + workflowTools.length + surveyTools.length + storeTools.length + productsTools.length + formTools.length + knowledgeBaseTools.length + conversationAITools.length
+          tools: [...APP_URL_TOOL_DEFINITIONS, ...genericApiTools, ...affiliateManagerTools, ...contactTools, ...conversationTools, ...blogTools, ...funnelTools, ...courseTools, ...opportunityTools, ...calendarTools, ...emailTools, ...locationTools, ...emailISVTools, ...socialMediaTools, ...mediaTools, ...objectTools, ...associationTools, ...customFieldV2Tools, ...workflowTools, ...surveyTools, ...storeTools, ...productsTools, ...paymentsTools, ...invoicesTools, ...formTools, ...knowledgeBaseTools, ...conversationAITools],
+          count: APP_URL_TOOL_DEFINITIONS.length + genericApiTools.length + affiliateManagerTools.length + contactTools.length + conversationTools.length + blogTools.length + funnelTools.length + courseTools.length + opportunityTools.length + calendarTools.length + emailTools.length + locationTools.length + emailISVTools.length + socialMediaTools.length + mediaTools.length + objectTools.length + associationTools.length + customFieldV2Tools.length + workflowTools.length + surveyTools.length + storeTools.length + productsTools.length + paymentsTools.length + invoicesTools.length + formTools.length + knowledgeBaseTools.length + conversationAITools.length
         });
       } catch (error) {
         res.status(500).json({ error: 'Failed to list tools' });
@@ -441,6 +493,9 @@ class GHLMCPHttpServer {
       contact: this.contactTools.getToolDefinitions().length,
       conversation: this.conversationTools.getToolDefinitions().length,
       blog: this.blogTools.getToolDefinitions().length,
+      funnel: this.funnelTools.getTools().length,
+      courses: this.courseTools.getTools().length,
+      affiliateManager: this.affiliateManagerTools.getTools().length,
       opportunity: this.opportunityTools.getToolDefinitions().length,
       calendar: this.calendarTools.getToolDefinitions().length,
       email: this.emailTools.getToolDefinitions().length,
@@ -455,12 +510,18 @@ class GHLMCPHttpServer {
       surveys: this.surveyTools.getTools().length,
       store: this.storeTools.getTools().length,
       products: this.productsTools.getTools().length,
+      payments: this.paymentsTools.getTools().length,
+      invoices: this.invoicesTools.getTools().length,
       form: this.formTools.getTools().length,
       knowledgeBase: this.knowledgeBaseTools.getTools().length,
       conversationAI: this.conversationAITools.getTools().length,
+      genericApi: this.genericApiTools.getTools().length,
       total: this.contactTools.getToolDefinitions().length + 
              this.conversationTools.getToolDefinitions().length + 
              this.blogTools.getToolDefinitions().length +
+             this.funnelTools.getTools().length +
+             this.courseTools.getTools().length +
+             this.affiliateManagerTools.getTools().length +
              this.opportunityTools.getToolDefinitions().length +
              this.calendarTools.getToolDefinitions().length +
              this.emailTools.getToolDefinitions().length +
@@ -475,9 +536,13 @@ class GHLMCPHttpServer {
              this.surveyTools.getTools().length +
              this.storeTools.getTools().length +
              this.productsTools.getTools().length +
+             this.paymentsTools.getTools().length +
+             this.invoicesTools.getTools().length +
              this.formTools.getTools().length +
              this.knowledgeBaseTools.getTools().length +
-             this.conversationAITools.getTools().length
+             this.conversationAITools.getTools().length +
+             this.genericApiTools.getTools().length +
+             APP_URL_TOOL_DEFINITIONS.length
     };
   }
 
@@ -546,33 +611,11 @@ class GHLMCPHttpServer {
   }
 
   private isCalendarTool(toolName: string): boolean {
-    const calendarToolNames = [
-      // Calendar Groups Management
-      'get_calendar_groups', 'create_calendar_group', 'validate_group_slug',
-      'update_calendar_group', 'delete_calendar_group', 'disable_calendar_group',
-      // Calendars
-      'get_calendars', 'create_calendar', 'get_calendar', 'update_calendar', 'delete_calendar',
-      // Events and Appointments
-      'get_calendar_events', 'get_free_slots', 'create_appointment', 'get_appointment',
-      'update_appointment', 'delete_appointment',
-      // Appointment Notes
-      'get_appointment_notes', 'create_appointment_note', 'update_appointment_note', 'delete_appointment_note',
-      // Calendar Resources
-      'get_calendar_resources', 'get_calendar_resource_by_id', 'update_calendar_resource', 'delete_calendar_resource',
-      // Calendar Notifications
-      'get_calendar_notifications', 'create_calendar_notification', 'update_calendar_notification', 'delete_calendar_notification',
-      // Blocked Slots
-      'create_block_slot', 'update_block_slot', 'get_blocked_slots', 'delete_blocked_slot'
-    ];
-    return calendarToolNames.includes(toolName);
+    return this.calendarTools.getToolDefinitions().some((tool) => tool.name === toolName);
   }
 
   private isEmailTool(toolName: string): boolean {
-    const emailToolNames = [
-      'get_email_campaigns', 'create_email_template', 'get_email_templates',
-      'update_email_template', 'delete_email_template'
-    ];
-    return emailToolNames.includes(toolName);
+    return this.emailTools.getToolDefinitions().some((tool) => tool.name === toolName);
   }
 
   private isLocationTool(toolName: string): boolean {
@@ -605,20 +648,7 @@ class GHLMCPHttpServer {
   }
 
   private isSocialMediaTool(toolName: string): boolean {
-    const socialMediaToolNames = [
-      // Post Management
-      'search_social_posts', 'create_social_post', 'get_social_post', 'update_social_post',
-      'delete_social_post', 'bulk_delete_social_posts',
-      // Account Management
-      'get_social_accounts', 'delete_social_account',
-      // CSV Operations
-      'upload_social_csv', 'get_csv_upload_status', 'set_csv_accounts',
-      // Categories & Tags
-      'get_social_categories', 'get_social_category', 'get_social_tags', 'get_social_tags_by_ids',
-      // OAuth Integration
-      'start_social_oauth', 'get_platform_accounts'
-    ];
-    return socialMediaToolNames.includes(toolName);
+    return this.socialMediaTools.getTools().some((tool) => tool.name === toolName);
   }
 
   private isMediaTool(toolName: string): boolean {
@@ -684,17 +714,15 @@ class GHLMCPHttpServer {
   }
 
   private isProductsTool(toolName: string): boolean {
-    const productsToolNames = [
-      'ghl_create_product', 'ghl_list_products', 'ghl_get_product', 'ghl_update_product',
-      'ghl_delete_product', 'ghl_bulk_update_products', 'ghl_create_price', 'ghl_list_prices',
-      'ghl_get_price', 'ghl_update_price', 'ghl_delete_price', 'ghl_list_inventory',
-      'ghl_update_inventory', 'ghl_get_product_store_stats', 'ghl_update_product_store',
-      'ghl_create_product_collection', 'ghl_list_product_collections', 'ghl_get_product_collection',
-      'ghl_update_product_collection', 'ghl_delete_product_collection', 'ghl_list_product_reviews',
-      'ghl_get_reviews_count', 'ghl_update_product_review', 'ghl_delete_product_review',
-      'ghl_bulk_update_product_reviews'
-    ];
-    return productsToolNames.includes(toolName);
+    return this.productsTools.getTools().some((tool) => tool.name === toolName);
+  }
+
+  private isPaymentsTool(toolName: string): boolean {
+    return this.paymentsTools.getTools().some((tool) => tool.name === toolName);
+  }
+
+  private isInvoicesTool(toolName: string): boolean {
+    return this.invoicesTools.getTools().some((tool) => tool.name === toolName);
   }
 
   /**
