@@ -39,6 +39,7 @@ import { KnowledgeBaseTools, isKnowledgeBaseTool } from './tools/knowledge-base-
 import { ConversationAITools, isConversationAITool } from './tools/conversation-ai-tools.js';
 import { QuanProvisioningTools, isQuanProvisioningTool } from './tools/quan-provisioning-tools.js';
 import { APP_URL_TOOL_DEFINITIONS, executeAppUrlTool } from './tools/app-url-tools.js';
+import { describeSecretPresence, formatError, summarizeToolArguments } from './utils/runtime-guard.js';
 
 // Load environment variables
 dotenv.config();
@@ -141,9 +142,9 @@ class GHLMCPServer {
     }
 
     process.stderr.write('[GHL MCP] Initializing GHL API client...\n');
-    process.stderr.write(`[GHL MCP] Base URL: ${config.baseUrl}\n`);
+    process.stderr.write(`[GHL MCP] Base URL: ${describeSecretPresence(config.baseUrl)}\n`);
     process.stderr.write(`[GHL MCP] Version: ${config.version}\n`);
-    process.stderr.write(`[GHL MCP] Location ID: ${config.locationId}\n`);
+    process.stderr.write(`[GHL MCP] Location ID: ${describeSecretPresence(config.locationId)}\n`);
 
     return new GHLApiClient(config);
   }
@@ -235,10 +236,10 @@ class GHLMCPServer {
           tools: allTools
         };
       } catch (error) {
-        console.error('[GHL MCP] Error listing tools:', error);
+        process.stderr.write(`[GHL MCP] Error listing tools: ${formatError(error)}\n`);
         throw new McpError(
           ErrorCode.InternalError,
-          `Failed to list tools: ${error}`
+          `Failed to list tools: ${formatError(error)}`
         );
       }
     });
@@ -248,7 +249,7 @@ class GHLMCPServer {
       const { name, arguments: args } = request.params;
       
       process.stderr.write(`[GHL MCP] Executing tool: ${name}\n`);
-      process.stderr.write(`[GHL MCP] Arguments: ${JSON.stringify(args, null, 2)}\n`);
+      process.stderr.write(`[GHL MCP] Argument summary: ${JSON.stringify(summarizeToolArguments(args))}\n`);
 
       try {
         let result: any;
@@ -317,7 +318,7 @@ class GHLMCPServer {
           ]
         };
       } catch (error) {
-        console.error(`[GHL MCP] Error executing tool ${name}:`, error);
+        process.stderr.write(`[GHL MCP] Error executing tool ${name}: ${formatError(error)}\n`);
         
         // Determine appropriate error code
         const errorCode = error instanceof Error && error.message.includes('404') 
@@ -326,7 +327,7 @@ class GHLMCPServer {
         
         throw new McpError(
           errorCode,
-          `Tool execution failed: ${error}`
+          `Tool execution failed: ${formatError(error)}`
         );
       }
     });
@@ -648,10 +649,10 @@ class GHLMCPServer {
       const result = await this.ghlClient.testConnection();
       
       process.stderr.write('[GHL MCP] ✅ GHL API connection successful\n');
-      process.stderr.write(`[GHL MCP] Connected to location: ${result.data?.locationId}\n`);
+      process.stderr.write(`[GHL MCP] Connected location ID: ${describeSecretPresence(result.data?.locationId)}\n`);
     } catch (error) {
       // GHL occasionally returns 5xx on /locations/{id}; do not block MCP tools for a blip.
-      console.error('[GHL MCP] ⚠️ GHL API connection test failed (server will still start):', error);
+      process.stderr.write(`[GHL MCP] ⚠️ GHL API connection test failed (server will still start): ${formatError(error)}\n`);
       process.stderr.write(
         '[GHL MCP] Retry tools in a minute or set GHL_MCP_SKIP_CONNECTION_TEST=true to silence this check.\n'
       );
@@ -831,7 +832,7 @@ class GHLMCPServer {
       process.stderr.write('=====================================\n');
       
     } catch (error) {
-      console.error('❌ Failed to start GHL MCP Server:', error);
+      process.stderr.write(`❌ Failed to start GHL MCP Server: ${formatError(error)}\n`);
       process.exit(1);
     }
   }
@@ -863,13 +864,13 @@ async function main(): Promise<void> {
     await server.start();
     
   } catch (error) {
-    console.error('💥 Fatal error:', error);
+    process.stderr.write(`💥 Fatal error: ${formatError(error)}\n`);
     process.exit(1);
   }
 }
 
 // Start the server
 main().catch((error) => {
-  console.error('Unhandled error:', error);
+  process.stderr.write(`Unhandled error: ${formatError(error)}\n`);
   process.exit(1);
-}); 
+});

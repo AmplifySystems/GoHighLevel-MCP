@@ -38,6 +38,7 @@ import { KnowledgeBaseTools, isKnowledgeBaseTool } from './tools/knowledge-base-
 import { ConversationAITools, isConversationAITool } from './tools/conversation-ai-tools.js';
 import { QuanProvisioningTools, isQuanProvisioningTool } from './tools/quan-provisioning-tools.js';
 import { GHLConfig } from './types/ghl-types';
+import { describeSecretPresence, formatError, safeSessionLabel, summarizeToolArguments } from './utils/runtime-guard.js';
 
 // Load environment variables
 dotenv.config();
@@ -167,9 +168,9 @@ class GHLMCPHttpServer {
     }
 
     console.log('[GHL MCP HTTP] Initializing GHL API client...');
-    console.log(`[GHL MCP HTTP] Base URL: ${config.baseUrl}`);
+    console.log(`[GHL MCP HTTP] Base URL: ${describeSecretPresence(config.baseUrl)}`);
     console.log(`[GHL MCP HTTP] Version: ${config.version}`);
-    console.log(`[GHL MCP HTTP] Location ID: ${config.locationId}`);
+    console.log(`[GHL MCP HTTP] Location ID: ${describeSecretPresence(config.locationId)}`);
 
     return new GHLApiClient(config);
   }
@@ -233,10 +234,10 @@ class GHLMCPHttpServer {
           tools: allTools
         };
       } catch (error) {
-        console.error('[GHL MCP HTTP] Error listing tools:', error);
+        console.error(`[GHL MCP HTTP] Error listing tools: ${formatError(error)}`);
         throw new McpError(
           ErrorCode.InternalError,
-          `Failed to list tools: ${error}`
+          `Failed to list tools: ${formatError(error)}`
         );
       }
     });
@@ -246,6 +247,7 @@ class GHLMCPHttpServer {
       const { name, arguments: args } = request.params;
       
       console.log(`[GHL MCP HTTP] Executing tool: ${name}`);
+      console.log(`[GHL MCP HTTP] Argument summary: ${JSON.stringify(summarizeToolArguments(args))}`);
 
       try {
         let result: any;
@@ -308,11 +310,11 @@ class GHLMCPHttpServer {
           ]
         };
       } catch (error) {
-        console.error(`[GHL MCP HTTP] Error executing tool ${name}:`, error);
+        console.error(`[GHL MCP HTTP] Error executing tool ${name}: ${formatError(error)}`);
         
         throw new McpError(
           ErrorCode.InternalError,
-          `Tool execution failed: ${error}`
+          `Tool execution failed: ${formatError(error)}`
         );
       }
     });
@@ -381,8 +383,8 @@ class GHLMCPHttpServer {
 
     // SSE endpoint for ChatGPT MCP connection
     const handleSSE = async (req: express.Request, res: express.Response) => {
-      const sessionId = req.query.sessionId || 'unknown';
-      console.log(`[GHL MCP HTTP] New SSE connection from: ${req.ip}, sessionId: ${sessionId}, method: ${req.method}`);
+      const sessionId = safeSessionLabel(req.query.sessionId || 'unknown');
+      console.log(`[GHL MCP HTTP] New SSE connection: session=${sessionId}, method=${req.method}`);
       
       try {
         // Create SSE transport (this will set the headers)
@@ -399,7 +401,7 @@ class GHLMCPHttpServer {
         });
         
       } catch (error) {
-        console.error(`[GHL MCP HTTP] SSE connection error for session ${sessionId}:`, error);
+        console.error(`[GHL MCP HTTP] SSE connection error for session ${sessionId}: ${formatError(error)}`);
         
         // Only send error response if headers haven't been sent yet
         if (!res.headersSent) {
@@ -707,10 +709,10 @@ class GHLMCPHttpServer {
       const result = await this.ghlClient.testConnection();
       
       console.log('[GHL MCP HTTP] ✅ GHL API connection successful');
-      console.log(`[GHL MCP HTTP] Connected to location: ${result.data?.locationId}`);
+      console.log(`[GHL MCP HTTP] Connected location ID: ${describeSecretPresence(result.data?.locationId)}`);
     } catch (error) {
-      console.error('[GHL MCP HTTP] ❌ GHL API connection failed:', error);
-      throw new Error(`Failed to connect to GHL API: ${error}`);
+      console.error(`[GHL MCP HTTP] ❌ GHL API connection failed: ${formatError(error)}`);
+      throw new Error(`Failed to connect to GHL API: ${formatError(error)}`);
     }
   }
 
@@ -736,7 +738,7 @@ class GHLMCPHttpServer {
       });
       
     } catch (error) {
-      console.error('❌ Failed to start GHL MCP HTTP Server:', error);
+      console.error(`❌ Failed to start GHL MCP HTTP Server: ${formatError(error)}`);
       process.exit(1);
     }
   }
@@ -768,13 +770,13 @@ async function main(): Promise<void> {
     await server.start();
     
   } catch (error) {
-    console.error('💥 Fatal error:', error);
+    console.error(`💥 Fatal error: ${formatError(error)}`);
     process.exit(1);
   }
 }
 
 // Start the server
 main().catch((error) => {
-  console.error('Unhandled error:', error);
+  console.error(`Unhandled error: ${formatError(error)}`);
   process.exit(1);
-}); 
+});
