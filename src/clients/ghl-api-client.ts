@@ -393,6 +393,7 @@ import {
   ListInvoicesResponseDto,
   AltDto
 } from '../types/ghl-types.js';
+import { formatError, summarizeToolArguments } from '../utils/runtime-guard.js';
 
 /**
  * GoHighLevel API Client
@@ -424,7 +425,7 @@ export class GHLApiClient {
         return config;
       },
       (error) => {
-        console.error('[GHL API] Request error:', error);
+        process.stderr.write(`[GHL API] Request error: ${formatError(error)}\n`);
         return Promise.reject(error);
       }
     );
@@ -436,11 +437,7 @@ export class GHLApiClient {
         return response;
       },
       (error: AxiosError<GHLErrorResponse>) => {
-        console.error('[GHL API] Response error:', {
-          status: error.response?.status,
-          message: error.response?.data?.message,
-          url: error.config?.url
-        });
+        process.stderr.write(`[GHL API] Response error: ${formatError(this.handleApiError(error))}\n`);
         return Promise.reject(this.handleApiError(error));
       }
     );
@@ -612,7 +609,7 @@ export class GHLApiClient {
         }
       }
 
-      process.stderr.write(`[GHL API] Search contacts payload: ${JSON.stringify(payload, null, 2)}\n`);
+      process.stderr.write(`[GHL API] Search contacts payload summary: ${JSON.stringify(summarizeToolArguments(payload))}\n`);
 
       const response: AxiosResponse<GHLSearchContactsResponse> = await this.axiosInstance.post(
         '/contacts/search',
@@ -622,12 +619,7 @@ export class GHLApiClient {
       return this.wrapResponse(response.data);
     } catch (error) {
       const axiosError = error as AxiosError<GHLErrorResponse>;
-      process.stderr.write(`[GHL API] Search contacts error: ${JSON.stringify({
-        status: axiosError.response?.status,
-        statusText: axiosError.response?.statusText,
-        data: axiosError.response?.data,
-        message: axiosError.message
-      }, null, 2)}\n`);
+      process.stderr.write(`[GHL API] Search contacts error: ${formatError(this.handleApiError(axiosError))}\n`);
       
       const handledError = this.handleApiError(axiosError);
       return {
@@ -1810,7 +1802,7 @@ export class GHLApiClient {
         params.getCalendarEvents = searchParams.getCalendarEvents;
       }
 
-      process.stderr.write(`[GHL API] Search opportunities params: ${JSON.stringify(params, null, 2)}\n`);
+      process.stderr.write(`[GHL API] Search opportunities params summary: ${JSON.stringify(summarizeToolArguments(params))}\n`);
 
       const response: AxiosResponse<GHLSearchOpportunitiesResponse> = await this.axiosInstance.get(
         '/opportunities/search',
@@ -1820,12 +1812,7 @@ export class GHLApiClient {
       return this.wrapResponse(response.data);
     } catch (error) {
       const axiosError = error as AxiosError<GHLErrorResponse>;
-      process.stderr.write(`[GHL API] Search opportunities error: ${JSON.stringify({
-        status: axiosError.response?.status,
-        statusText: axiosError.response?.statusText,
-        data: axiosError.response?.data,
-        message: axiosError.message
-      }, null, 2)}\n`);
+      process.stderr.write(`[GHL API] Search opportunities error: ${formatError(this.handleApiError(axiosError))}\n`);
       
       throw this.handleApiError(axiosError);
     }
@@ -3033,8 +3020,8 @@ export class GHLApiClient {
 
       const recordingResponse: GHLMessageRecordingResponse = {
         audioData: response.data,
-        contentType: response.headers['content-type'] || 'audio/x-wav',
-        contentDisposition: response.headers['content-disposition'] || 'attachment; filename=audio.wav'
+        contentType: String(response.headers['content-type'] || 'audio/x-wav'),
+        contentDisposition: String(response.headers['content-disposition'] || 'attachment; filename=audio.wav')
       };
 
       return this.wrapResponse(recordingResponse);
@@ -6985,4 +6972,4 @@ export class GHLApiClient {
       throw error;
     }
   }
-} 
+}
